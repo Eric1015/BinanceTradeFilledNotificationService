@@ -1,0 +1,59 @@
+service: BinanceTradeFilledNotifService
+
+provider:
+  name: aws
+  runtime: nodejs12.x
+  environment:
+    NODE_ENV: dev
+
+plugins:
+  - serverless-plugin-typescript 
+  - serverless-offline
+
+package:
+  exclude:
+    - config/.env.stg
+    - config/.env.pro
+  include:
+    - config/.env.dev
+
+functions:
+  SaveCurrentOpenOrders:
+    handler: app/handler.saveCurrentOpenOrders
+    events:
+      - http:
+          path: open-orders
+          method: post
+          private: true
+      - eventBridge:
+          schedule: rate(10 minutes) # I am trading on a daily basis, so it is ok to have a maximum of 10 minutes delay
+  UpdateSavedOpenOrders:
+    handler: app/handler.updateSavedOpenOrders
+    events:
+      - http:
+          path: update-open-orders
+          method: post
+          private: true
+      - eventBridge:
+          schedule: rate(10 minutes) # I am trading on a daily basis, so it is ok to have a maximum of 10 minutes delay
+resources:
+  Resources:
+    BinanceSimulationTable:
+      Type: "AWS::DynamoDB::Table"
+      Properties:
+        TableName: binance-open-orders
+        AttributeDefinitions:
+          - 
+            AttributeName: OrderId
+            AttributeType: N
+          -
+            AttributeName: Status
+            AttributeType: S
+        KeySchema:
+          -
+            AttributeName: OrderId
+            KeyType: HASH
+          - 
+            AttributeName: Status
+            KeyType: RANGE
+        BillingMode: PAY_PER_REQUEST
