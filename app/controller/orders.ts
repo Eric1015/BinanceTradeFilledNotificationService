@@ -31,7 +31,8 @@ interface UpdateOrderParams {
     cummulativeQuoteQty: string;
 }
 
-const tableName = "binance-orders";
+const tableName = "binance-open-orders";
+const statusIndexName = "binance-open-orders-status-index";
 
 export class OrdersController {
     dynamoDb: AWS.DynamoDB.DocumentClient;
@@ -42,18 +43,21 @@ export class OrdersController {
 
     async find(orderId: number): Promise<DynamoDBOrderModel | null> {
         try {
-            const dynamoDbGetSimulationRequest = {
+            const dynamoDbGetSimulationRequest: AWS.DynamoDB.DocumentClient.QueryInput = {
                 ExpressionAttributeValues: {
-                    ":v1": {
-                        S: orderId,
-                    }
+                    ":v1": orderId,
                 }, 
-                KeyConditionExpression: "OrderId = :v1", 
+                ExpressionAttributeNames: {
+                    "#a1": "OrderId"
+                },
+                KeyConditionExpression: "#a1 = :v1", 
                 TableName: tableName,
             }
             const result = await this.dynamoDb.query(dynamoDbGetSimulationRequest).promise();
             const orders = result.Items;
-            return orders ? this.parseDynamoDBData(orders[0]) : null;
+            const order = orders.length ? this.parseDynamoDBData(orders[0]) : null;
+            console.log(order);
+            return order;
         } catch (err) {
             console.error(err);
             throw new Error(err);
@@ -63,14 +67,16 @@ export class OrdersController {
     // get orders that are still in NEW status (pending orders)
     async getOpenOrders(): Promise<DynamoDBOrderModel[]> {
         try {
-            const dynamoDbGetSimulationRequest = {
+            const dynamoDbGetSimulationRequest: AWS.DynamoDB.DocumentClient.QueryInput = {
                 ExpressionAttributeValues: {
-                    ":v1": {
-                        S: OrderStatus.NEW,
-                    }
+                    ":v1": OrderStatus.NEW,
                 }, 
-                KeyConditionExpression: "Status = :v1", 
+                ExpressionAttributeNames: {
+                    "#a1": "Status"
+                },
+                KeyConditionExpression: "#a1 = :v1", 
                 TableName: tableName,
+                IndexName: statusIndexName,
             }
             const result = await this.dynamoDb.query(dynamoDbGetSimulationRequest).promise();
             const openOrders = result.Items;
@@ -99,7 +105,7 @@ export class OrdersController {
     // update the simulation data in DynamoDB
     async update(orderItem: DynamoDBOrderModel, params: UpdateOrderParams): Promise<void> {
         try {
-            const dynamoDbUpdateSimulationRequest = this.getOrderDynamodbRequestParams({
+            const dynamoDbUpdateSimulationRequest: AWS.DynamoDB.DocumentClient.PutItemInput = this.getOrderDynamodbRequestParams({
                 ...orderItem,
                 ...params,
             });
@@ -114,33 +120,15 @@ export class OrdersController {
     private getOrderDynamodbRequestParams(params: DynamoDBOrderModel) {
         return {
             Item: {
-                OrderId: {
-                    S: params.orderId,
-                },
-                Symbol: {
-                    S: params.symbol,
-                },
-                Status: {
-                    S: params.status,
-                },
-                Side: {
-                    S: params.side,
-                },
-                Price: {
-                    N: parseFloat(params.price),
-                },
-                OriginalQuantity: {
-                    N: parseFloat(params.origQty),
-                },
-                ExecutedQuantity: {
-                    N: parseFloat(params.executedQty),
-                },
-                CummulativeQuoteQuantity: {
-                    N: parseFloat(params.cummulativeQuoteQty),
-                },
-                OriginalQuoteQuantity: {
-                    N: parseFloat(params.origQuoteOrderQty),
-                }
+                OrderId: params.orderId,
+                Symbol: params.symbol,
+                Status: params.status,
+                Side: params.side,
+                Price: parseFloat(params.price),
+                OriginalQuantity: parseFloat(params.origQty),
+                ExecutedQuantity: parseFloat(params.executedQty),
+                CummulativeQuoteQuantity: parseFloat(params.cummulativeQuoteQty),
+                OriginalQuoteQuantity: parseFloat(params.origQuoteOrderQty),
             },
             TableName: tableName,
         }

@@ -53,7 +53,13 @@ resources:
           -
             AttributeName: OrderId
             KeyType: HASH
-          - 
-            AttributeName: Status
-            KeyType: RANGE
         BillingMode: PAY_PER_REQUEST
+        GlobalSecondaryIndexes:
+          - 
+            IndexName: binance-open-orders-status-index
+            KeySchema:
+              -
+                AttributeName: Status
+                KeyType: HASH
+            Projection:
+              ProjectionType: ALL

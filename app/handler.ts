@@ -20,7 +20,9 @@ const ordersController = new OrdersController();
 const binanceAPIController = new BinanceAPIController(process.env.BINANCE_API_KEY, process.env.BINANCE_SECRET_KEY);
 
 export const saveCurrentOpenOrders: Handler = async () => {
+  console.log(`Start of SaveCurrentOpenOrders`);
   const openOrders = await binanceAPIController.fetchOpenOrders();
+  console.log(openOrders);
   for (const order of openOrders) {
     const findOrderResult = await ordersController.find(order.orderId);
     if (findOrderResult) {
@@ -43,9 +45,17 @@ export const saveCurrentOpenOrders: Handler = async () => {
       });
     }
   }
+  const response = {
+    statusCode: 200,
+    body: JSON.stringify({ message: "Successful" }),
+  }
+  console.log(response);
+  console.log(`End of SaveCurrentOpenOrders`);
+  return response;
 }
 
 export const updateSavedOpenOrders: Handler = async () => {
+  console.log(`Start of UpdateSavedOpenOrders`);
   const openOrders = await ordersController.getOpenOrders();
   for (const order of openOrders) {
     const fetchedOrder = await binanceAPIController.queryOrder({
@@ -66,4 +76,11 @@ export const updateSavedOpenOrders: Handler = async () => {
       cummulativeQuoteQty: fetchedOrder.cummulativeQuoteQty,
     });
   }
+  const response = {
+    statusCode: 200,
+    body: JSON.stringify({ message: "Successful" }),
+  }
+  console.log(response);
+  console.log(`End of UpdateSavedOpenOrders`);
+  return response;
 }
