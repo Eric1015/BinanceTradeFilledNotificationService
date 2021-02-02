@@ -64,7 +64,7 @@ export const updateSavedOpenOrders: Handler = async () => {
       symbol: order.symbol,
     });
     if (fetchedOrder.status === OrderStatus.FILLED) {
-      await notificationsController.sendSMSAndEmailMessage({
+      await notificationsController.sendEmailMessage({
         to: process.env.TARGET_EMAIL,
         from: process.env.SENDGRID_FROM_EMAIL,
         subject: `Order #${fetchedOrder.orderId} filled!`,
