@@ -94,8 +94,7 @@ export class OrdersController {
             const dynamoDbCreateOrderRequest = this.getOrderDynamodbRequestParams({
                 ...params,
             });
-            const result = await this.dynamoDb.put(dynamoDbCreateOrderRequest).promise();
-            console.log(result);
+            await this.dynamoDb.put(dynamoDbCreateOrderRequest).promise();
         } catch (err) {
             console.error(err);
             throw new Error(err);
@@ -109,8 +108,7 @@ export class OrdersController {
                 ...orderItem,
                 ...params,
             });
-            const result = await this.dynamoDb.put(dynamoDbUpdateSimulationRequest).promise();
-            console.log(result);
+            await this.dynamoDb.put(dynamoDbUpdateSimulationRequest).promise();
         } catch (err) {
             console.log(err);
             throw new Error(err);

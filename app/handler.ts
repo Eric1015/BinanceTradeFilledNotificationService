@@ -57,6 +57,7 @@ export const saveCurrentOpenOrders: Handler = async () => {
 export const updateSavedOpenOrders: Handler = async () => {
   console.log(`Start of UpdateSavedOpenOrders`);
   const openOrders = await ordersController.getOpenOrders();
+  console.log(openOrders);
   for (const order of openOrders) {
     const fetchedOrder = await binanceAPIController.queryOrder({
       orderId: order.orderId,
