@@ -63,7 +63,7 @@ export class NotificationsController {
 
   async sendSMSAndEmailMessage(params: SendMessageParams): Promise<boolean> {
     const emailResult = await this.sendEmailMessage(params);
-    const smsResult = await this.sendSMSAndEmailMessage(params);
+    const smsResult = await this.sendSMSMessage(params);
     return emailResult && smsResult;
   }
 }
